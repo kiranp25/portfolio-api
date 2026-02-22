@@ -23,7 +23,7 @@ services:
     image: ${DOCKER_USERNAME}/portfolio-api:latest
     restart: always
     ports:
-      - "8000:8000"
+      - "80:8000"
 
     depends_on:
       - db
