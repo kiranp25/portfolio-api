@@ -39,7 +39,7 @@ jobs:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USERNAME }}
         key: ${{ secrets.EC2_SSH_KEY }}
-        source: "docker-compose.yml"
+        source: "docker-compose.yml,nginx.conf"
         target: "~/portfolio-app"
 
     - name: Deploy via SSH
@@ -53,4 +53,5 @@ jobs:
           echo "${{ secrets.ENV_FILE_CONTENT }}" > .env
           docker-compose pull
           docker-compose up -d
+          docker exec portfolio-app-api-1 alembic upgrade head
 
