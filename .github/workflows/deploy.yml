@@ -1,0 +1,56 @@
+name: Deploy Portfolio API  # the name appear in github action tab
+
+
+on:
+  push:
+    branches: [main]  #The Start button, the Scripts run only push the code on main branch
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest #Uses a fresh Linux machine provided by GitHub
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4 # Copies your code from the repo onto the GitHub machine.
+  
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+      
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/portfolio-api:latest
+  
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Copy docker-compose.yml to EC2
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        source: "docker-compose.yml"
+        target: "~/portfolio-app"
+
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |  #1. Create the folder if not exist and enter it
+          mkdir -p ~/portfolio-app &&  cd ~/portfolio-app
+          echo "${{ secrets.ENV_FILE_CONTENT }}" > .env
+          docker-compose pull
+          docker-compose up -d
+
