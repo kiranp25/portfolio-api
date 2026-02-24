@@ -57,6 +57,6 @@ def hash_token(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
+def s(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
-def s:
-    pass
